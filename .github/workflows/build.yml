@@ -22,16 +22,43 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        
-      - name: Manually accept Android SDK licenses
+      - name: Install system dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          
+      - name: Install Android SDK manually
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          mkdir -p $ANDROID_HOME
+          cd $ANDROID_HOME
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O commandlinetools.zip
+          unzip commandlinetools.zip
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/bin cmdline-tools/latest/
+          mv cmdline-tools/lib cmdline-tools/latest/
+          rm commandlinetools.zip
+          
+      - name: Set up Android environment
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_ENV
+          
+      - name: Accept Android SDK licenses
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
           mkdir -p "$HOME/.android"
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > "$HOME/.android/repositories.cfg"
-          mkdir -p "/home/runner/.android/licenses"
-          echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "/home/runner/.android/licenses/android-sdk-license"
-          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "/home/runner/.android/licenses/android-sdk-preview-license"
+          mkdir -p "$HOME/.android/licenses"
+          echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "$HOME/.android/licenses/android-sdk-license"
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "$HOME/.android/licenses/android-sdk-preview-license"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          
+      - name: Install build tools
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;31.0.0" "platforms;android-31" "platform-tools"
           
       - name: Install Python dependencies
         run: |
