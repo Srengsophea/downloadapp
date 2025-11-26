@@ -25,9 +25,13 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         
-      - name: Force accept Android SDK licenses
+      - name: Manually accept Android SDK licenses
         run: |
-          yes | sdkmanager --licenses || true
+          mkdir -p "$HOME/.android"
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > "$HOME/.android/repositories.cfg"
+          mkdir -p "/home/runner/.android/licenses"
+          echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55" > "/home/runner/.android/licenses/android-sdk-license"
+          echo -e "\n84831b9409646a918e30573bab4c9c91346d8abd" > "/home/runner/.android/licenses/android-sdk-preview-license"
           
       - name: Install Python dependencies
         run: |
