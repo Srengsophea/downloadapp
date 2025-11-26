@@ -21,9 +21,15 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython kivy python-for-android yt-dlp
           
+      - name: Set up Android SDK
+        run: |
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
+          
       - name: Accept Android SDK licenses
         run: |
-          echo "y" | sudo ${ANDROID_HOME}/tools/bin/sdkmanager --licenses || true
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           
       - name: Build APK
         run: |
