@@ -25,9 +25,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         
-      - name: Accept Android SDK licenses
+      - name: Force accept Android SDK licenses
         run: |
-          echo "y" | sdkmanager --licenses
+          yes | sdkmanager --licenses || true
           
       - name: Install Python dependencies
         run: |

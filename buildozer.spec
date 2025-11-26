@@ -46,6 +46,9 @@ android.archs = arm64-v8a
 # (bool) enables Android auto backup feature (Android API >=23)
 android.allow_backup = True
 
+# (str) android version of the build tools
+# android.build_tools_version = 31.0.0
+
 [buildozer]
 
 # (int) Log level (0 = error only, 1 = info, 2 = debug (with command output))
