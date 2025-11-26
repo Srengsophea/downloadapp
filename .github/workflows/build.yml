@@ -7,7 +7,9 @@ on:
 
 jobs:
   build-apk:
-    runs-on: ubuntu-latest
+    # FIX 1: Use ubuntu-22.04 because ubuntu-latest (24.04) breaks Android builds
+    runs-on: ubuntu-22.04
+    
     steps:
       - uses: actions/checkout@v4
       
@@ -25,9 +27,11 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget unzip build-essential libssl-dev libffi-dev python3-dev
-          # Fixes "Aidl not found" and 32-bit library issues
-          sudo apt-get install -y libstdc++6 zlib1g-dev
+          # FIX 2: Install ALL required build tools (autoconf, libtool, ncurses are critical)
+          sudo apt-get install -y \
+            build-essential libltdl-dev libffi-dev libssl-dev python3-dev \
+            git zip unzip autoconf autotools-dev libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libstdc++6
           
       - name: Setup Android SDK & Licenses
         run: |
@@ -38,7 +42,7 @@ jobs:
           
           # 2. Download Command Line Tools
           mkdir -p $ANDROID_HOME/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
           unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
           mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
           rm cmdline-tools.zip
@@ -47,7 +51,6 @@ jobs:
           echo "PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools/31.0.0" >> $GITHUB_ENV
           
           # 4. Accept Licenses GLOBALLY
-          # This writes the licenses to the folder Buildozer checks
           mkdir -p $HOME/.android/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.android/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> $HOME/.android/licenses/android-sdk-license
@@ -62,15 +65,15 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install buildozer cython kivy python-for-android yt-dlp
+          # FIX 3: Install Cython < 3.0 because Kivy sometimes fails with Cython 3
+          pip install "Cython<3.0" buildozer kivy python-for-android yt-dlp
           
       - name: Build APK
         run: |
-          # Ensure buildozer uses the SDK we set up
           export ANDROIDSDK=$HOME/android-sdk
           export PATH=$PATH:$HOME/android-sdk/build-tools/31.0.0
           
-          # Run buildozer (licenses are already accepted, so no 'yes |' needed)
+          # Run buildozer
           buildozer android debug
           
       - name: Upload APK
