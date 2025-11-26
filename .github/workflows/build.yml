@@ -21,16 +21,27 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython kivy python-for-android yt-dlp
           
-      - name: Pre-accept Android SDK licenses
+      - name: Install Android SDK
+        run: |
+          sudo mkdir -p /opt/android-sdk
+          cd /opt/android-sdk
+          sudo wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          sudo unzip commandlinetools-linux-9477386_latest.zip
+          sudo mkdir -p cmdline-tools/latest
+          sudo mv cmdline-tools/bin cmdline-tools/latest/
+          sudo mv cmdline-tools/lib cmdline-tools/latest/
+          sudo rm commandlinetools-linux-9477386_latest.zip
+          
+      - name: Set up Android environment
+        run: |
+          echo "export ANDROID_HOME=/opt/android-sdk" >> $GITHUB_ENV
+          echo "export PATH=$PATH:/opt/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_ENV
+          
+      - name: Accept Android SDK licenses
         run: |
           mkdir -p "$HOME/.android"
           echo "y" > "$HOME/.android/repositories.cfg"
-          
-      - name: Install SDK tools and accept licenses
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y android-sdk
-          echo "y" | sudo /usr/lib/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/usr/lib/android-sdk --licenses
+          echo "y" | sudo /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/opt/android-sdk --licenses
           
       - name: Build APK
         run: |
